@@ -1,0 +1,121 @@
+[
+  {
+    "symbol": "000660.KS",
+    "name": "SK하이닉스",
+    "market": "KR",
+    "sector": "Semiconductor",
+    "color": "#3498db"
+  },
+  {
+    "symbol": "TSLA",
+    "name": "Tesla",
+    "market": "US",
+    "sector": "EV / Mobility",
+    "color": "#e74c3c"
+  },
+  {
+    "symbol": "NVDA",
+    "name": "NVIDIA",
+    "market": "US",
+    "sector": "Semiconductor",
+    "color": "#2ecc71"
+  },
+  {
+    "symbol": "042120.KQ",
+    "name": "데브시스터즈",
+    "market": "KR",
+    "sector": "Gaming",
+    "color": "#8e44ad"
+  },
+  {
+    "symbol": "013570.KS",
+    "name": "까뮤이앤씨",
+    "market": "KR",
+    "sector": "Construction",
+    "color": "#c0392b"
+  },
+  {
+    "symbol": "196170.KQ",
+    "name": "알테오젠",
+    "market": "KR",
+    "sector": "Bio / Pharma",
+    "color": "#16a085"
+  },
+  {
+    "symbol": "PLTR",
+    "name": "Palantir",
+    "market": "US",
+    "sector": "Technology",
+    "color": "#9b59b6"
+  },
+  {
+    "symbol": "META",
+    "name": "Meta",
+    "market": "US",
+    "sector": "Technology",
+    "color": "#d4a843"
+  },
+  {
+    "symbol": "MSFT",
+    "name": "Microsoft",
+    "market": "US",
+    "sector": "Technology",
+    "color": "#1abc9c"
+  },
+  {
+    "symbol": "SOXL",
+    "name": "SOXL",
+    "market": "US",
+    "sector": "ETF / Leverage",
+    "color": "#95a5c4"
+  },
+  {
+    "symbol": "233740.KS",
+    "name": "KODEX 코스닥150레버리지",
+    "market": "KR",
+    "sector": "ETF / Leverage",
+    "color": "#7f8c8d"
+  },
+  {
+    "symbol": "138580.KQ",
+    "name": "오이솔루션",
+    "market": "KR",
+    "sector": "Technology",
+    "color": "#e67e22"
+  },
+  {
+    "symbol": "302440.KQ",
+    "name": "카이노스메드",
+    "market": "KR",
+    "sector": "Bio / Pharma",
+    "color": "#27ae60"
+  },
+  {
+    "symbol": "001510.KS",
+    "name": "SK증권",
+    "market": "KR",
+    "sector": "Finance",
+    "color": "#f39c12"
+  },
+  {
+    "symbol": "FGMR",
+    "name": "Figma",
+    "market": "US",
+    "sector": "Technology",
+    "color": "#2c3e50"
+  },
+  {
+    "symbol": "BMNU",
+    "name": "BMNU",
+    "market": "US",
+    "sector": "Technology",
+    "color": "#d35400"
+  },
+  {
+    "symbol": "ASPB",
+    "name": "Aspire Bio",
+    "market": "US",
+    "sector": "Bio / Pharma",
+    "color": "#e8c468"
+  }
+]
