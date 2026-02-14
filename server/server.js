@@ -1,6 +1,12 @@
 import express from 'express';
 import cors from 'cors';
 import yahooFinance from 'yahoo-finance2';
+import fs from 'fs/promises';
+import path from 'path';
+import {fileURLToPath} from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -206,6 +212,88 @@ app.post('/api/portfolio-quote', async (req, res) => {
         });
     } catch (err) {
         console.error('[portfolio-quote] Error:', err.message);
+        res.status(500).json({error: err.message});
+    }
+});
+
+// ===== WATCHLIST API =====
+const WATCHLIST_FILE = path.join(__dirname, 'watchlist.json');
+
+// GET - 관심종목 목록 조회
+app.get('/api/watchlist', async (req, res) => {
+    console.log('[watchlist] GET request');
+    try {
+        const data = await fs.readFile(WATCHLIST_FILE, 'utf-8');
+        const watchlist = JSON.parse(data);
+        console.log(`[watchlist] Success - ${watchlist.length} items`);
+        res.json({watchlist, fetchedAt: new Date().toISOString()});
+    } catch (err) {
+        console.error('[watchlist] Error:', err.message);
+        res.status(500).json({error: err.message});
+    }
+});
+
+// POST - 관심종목 추가
+app.post('/api/watchlist', async (req, res) => {
+    const {symbol, name, market, sector, color} = req.body;
+    console.log(`[watchlist] POST request - ${symbol}`);
+
+    try {
+        if (!symbol || !name) {
+            return res.status(400).json({error: 'symbol and name required'});
+        }
+
+        const data = await fs.readFile(WATCHLIST_FILE, 'utf-8');
+        const watchlist = JSON.parse(data);
+
+        // 중복 체크
+        if (watchlist.find(w => w.symbol === symbol)) {
+            console.log(`[watchlist] Failed - ${symbol} already exists`);
+            return res.status(409).json({error: 'Already in watchlist'});
+        }
+
+        const newItem = {
+            symbol,
+            name,
+            market: market || 'US',
+            sector: sector || 'Technology',
+            color: color || '#95a5c4'
+        };
+
+        watchlist.push(newItem);
+        await fs.writeFile(WATCHLIST_FILE, JSON.stringify(watchlist, null, 2));
+
+        console.log(`[watchlist] Success - Added ${symbol}`);
+        res.json({message: 'Added to watchlist', item: newItem, watchlist});
+    } catch (err) {
+        console.error('[watchlist] Error:', err.message);
+        res.status(500).json({error: err.message});
+    }
+});
+
+// DELETE - 관심종목 삭제
+app.delete('/api/watchlist/:symbol', async (req, res) => {
+    const {symbol} = req.params;
+    console.log(`[watchlist] DELETE request - ${symbol}`);
+
+    try {
+        const data = await fs.readFile(WATCHLIST_FILE, 'utf-8');
+        let watchlist = JSON.parse(data);
+
+        const originalLength = watchlist.length;
+        watchlist = watchlist.filter(w => w.symbol !== symbol);
+
+        if (watchlist.length === originalLength) {
+            console.log(`[watchlist] Failed - ${symbol} not found`);
+            return res.status(404).json({error: 'Not found in watchlist'});
+        }
+
+        await fs.writeFile(WATCHLIST_FILE, JSON.stringify(watchlist, null, 2));
+
+        console.log(`[watchlist] Success - Removed ${symbol}`);
+        res.json({message: 'Removed from watchlist', watchlist});
+    } catch (err) {
+        console.error('[watchlist] Error:', err.message);
         res.status(500).json({error: err.message});
     }
 });
