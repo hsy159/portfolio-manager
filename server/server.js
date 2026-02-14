@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
-import yahooFinance from 'yahoo-finance2';
+import YahooFinance from 'yahoo-finance2';
+const yahooFinance = new YahooFinance();
 import fs from 'fs/promises';
 import path from 'path';
 import {fileURLToPath} from 'url';
@@ -26,7 +27,14 @@ async function cached(key, ttlMs, fn) {
 }
 
 // Normalize Korean stock symbols
-const norm = s => /^\d{6}$/.test(s) ? s + '.KS' : s;
+const norm = s => {
+    if (/^\d{6}$/.test(s)) {
+        // 코스닥 종목 (일반적으로 0으로 시작하지만 정확한 구분은 어려움)
+        // 일단 .KS로 시도하고, 실패하면 .KQ로 재시도하는 로직 필요
+        return s + '.KS';
+    }
+    return s;
+};
 
 // ===== QUOTE =====
 app.get('/api/quote', async (req, res) => {
@@ -44,12 +52,20 @@ app.get('/api/quote', async (req, res) => {
             for (const sym of symbols) {
                 try {
                     const q = await yahooFinance.quote(sym);
-                    console.log(`[quote] Success - ${sym}: ${q.regularMarketPrice} ${q.currency}`);
+                    const price = q.regularMarketPrice ?? q.currentPrice ?? q.postMarketPrice ?? q.preMarketPrice;
+
+                    if (!price) {
+                        console.log(`[quote] Failed - ${sym}: No price data available`);
+                        out.push({symbol: sym, error: 'No price data available'});
+                        continue;
+                    }
+
+                    console.log(`[quote] Success - ${sym}: ${price} ${q.currency}`);
                     out.push({
                         symbol: q.symbol, name: q.shortName || q.longName || q.symbol,
-                        price: q.regularMarketPrice, previousClose: q.regularMarketPreviousClose,
-                        change: q.regularMarketChange, changePercent: q.regularMarketChangePercent,
-                        volume: q.regularMarketVolume, marketCap: q.marketCap,
+                        price: price, previousClose: q.regularMarketPreviousClose ?? q.previousClose,
+                        change: q.regularMarketChange ?? q.change, changePercent: q.regularMarketChangePercent ?? q.changePercent,
+                        volume: q.regularMarketVolume ?? q.volume, marketCap: q.marketCap,
                         currency: q.currency, exchange: q.exchange, marketState: q.marketState,
                     });
                 } catch (e) {
@@ -105,13 +121,20 @@ app.get('/api/exchange', async (req, res) => {
 
     try {
         const q = await cached('fx:' + sym, 60000, () => yahooFinance.quote(sym));
-        console.log(`[exchange] Success - ${from}${to}: ${q.regularMarketPrice}`);
+        const rate = q.regularMarketPrice ?? q.currentPrice ?? q.ask ?? q.bid;
+
+        if (!rate) {
+            console.log(`[exchange] Failed - ${from}${to}: No rate data available`);
+            return res.status(500).json({error: 'No rate data available'});
+        }
+
+        console.log(`[exchange] Success - ${from}${to}: ${rate}`);
         res.json({
             rates: [{
                 pair: `${from}${to}`,
-                rate: q.regularMarketPrice,
-                change: q.regularMarketChange,
-                changePercent: q.regularMarketChangePercent
+                rate: rate,
+                change: q.regularMarketChange ?? q.change,
+                changePercent: q.regularMarketChangePercent ?? q.changePercent
             }], fetchedAt: new Date().toISOString()
         });
     } catch (err) {
@@ -178,15 +201,17 @@ app.post('/api/portfolio-quote', async (req, res) => {
             const q = quoteMap[sym];
             if (!q) return {...h, symbol: sym, error: 'Not found'};
 
-            const price = q.regularMarketPrice;
+            const price = q.regularMarketPrice ?? q.currentPrice ?? q.postMarketPrice ?? q.preMarketPrice;
+            if (!price) return {...h, symbol: sym, error: 'No price data'};
+
             const isKR = q.currency === 'KRW';
             const valueKRW = isKR ? price * h.qty : price * h.qty * usdkrw;
             const costKRW = isKR ? h.buyPrice * h.qty : h.buyPrice * h.qty * usdkrw;
 
             return {
                 symbol: sym, name: q.shortName || q.longName, currency: q.currency,
-                currentPrice: price, previousClose: q.regularMarketPreviousClose,
-                change: q.regularMarketChange, changePercent: q.regularMarketChangePercent,
+                currentPrice: price, previousClose: q.regularMarketPreviousClose ?? q.previousClose,
+                change: q.regularMarketChange ?? q.change, changePercent: q.regularMarketChangePercent ?? q.changePercent,
                 qty: h.qty, buyPrice: h.buyPrice,
                 returnPct: Math.round(((price - h.buyPrice) / h.buyPrice) * 10000) / 100,
                 valueKRW: Math.round(valueKRW), costKRW: Math.round(costKRW),
