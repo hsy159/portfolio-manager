@@ -1764,15 +1764,69 @@
     ];
 
     let holdings = JSON.parse(localStorage.getItem('holdings')) || DEFAULT_HOLDINGS;
-    let watchlist = JSON.parse(localStorage.getItem('watchlist')) || DEFAULT_WATCHLIST;
+    let watchlist = [];
     let liveData = {}, watchLiveData = {};
 
     function saveHoldings() {
         localStorage.setItem('holdings', JSON.stringify(holdings))
     }
 
-    function saveWatchlist() {
-        localStorage.setItem('watchlist', JSON.stringify(watchlist))
+    async function loadWatchlist() {
+        if (!apiConnected) {
+            watchlist = JSON.parse(localStorage.getItem('watchlist')) || DEFAULT_WATCHLIST;
+            return;
+        }
+        try {
+            const data = await apiGet('/api/watchlist');
+            watchlist = data.watchlist;
+            updateWatchBadge();
+        } catch (e) {
+            console.error('Load watchlist:', e);
+            watchlist = JSON.parse(localStorage.getItem('watchlist')) || DEFAULT_WATCHLIST;
+        }
+    }
+
+    async function saveWatchlist() {
+        if (!apiConnected) {
+            localStorage.setItem('watchlist', JSON.stringify(watchlist));
+            return;
+        }
+        // API를 통해 저장되므로 별도 작업 불필요
+    }
+
+    async function addToWatchlist(item) {
+        if (!apiConnected) {
+            watchlist.push(item);
+            localStorage.setItem('watchlist', JSON.stringify(watchlist));
+            return;
+        }
+        try {
+            const data = await apiPost('/api/watchlist', item);
+            watchlist = data.watchlist;
+        } catch (e) {
+            console.error('Add to watchlist:', e);
+            throw e;
+        }
+    }
+
+    async function removeFromWatchlist(symbol) {
+        if (!apiConnected) {
+            watchlist = watchlist.filter(w => w.symbol !== symbol);
+            localStorage.setItem('watchlist', JSON.stringify(watchlist));
+            return;
+        }
+        try {
+            const r = await fetch(PROXY_URL + '/api/watchlist/' + encodeURIComponent(symbol), {
+                method: 'DELETE',
+                signal: AbortSignal.timeout(8000)
+            });
+            if (!r.ok) throw new Error('API ' + r.status);
+            const data = await r.json();
+            watchlist = data.watchlist;
+        } catch (e) {
+            console.error('Remove from watchlist:', e);
+            throw e;
+        }
     }
 
     function updateWatchBadge() {
@@ -1808,6 +1862,7 @@
                 apiConnected = true;
                 setStatus('connected', '연결됨');
                 showToast('✅', '프록시 서버 연결 성공!');
+                await loadWatchlist();
                 await refreshData();
                 startAutoRefresh();
             }
@@ -2040,11 +2095,15 @@
         updateWatchBadge();
     }
 
-    function removeWatch(i) {
-        watchlist.splice(i, 1);
-        saveWatchlist();
-        renderWatchlist();
-        showToast('🗑️', '관심종목에서 제거');
+    async function removeWatch(i) {
+        const symbol = watchlist[i].symbol;
+        try {
+            await removeFromWatchlist(symbol);
+            renderWatchlist();
+            showToast('🗑️', '관심종목에서 제거');
+        } catch (e) {
+            showToast('❌', '삭제 실패: ' + e.message);
+        }
     }
 
     // === REBALANCE ===
@@ -2182,17 +2241,20 @@
         if (modalMode === 'watchlist') {
             if (!name || !ticker) return showToast('⚠️', '종목명과 티커를 입력해주세요.');
             if (watchlist.find(w => w.symbol === sym)) return showToast('⚠️', '이미 관심종목에 있습니다.');
-            watchlist.push({
+            const newItem = {
                 symbol: sym,
                 name,
                 market: isKR ? 'KR' : 'US',
                 sector,
                 color: COLORS[watchlist.length % COLORS.length]
+            };
+            addToWatchlist(newItem).then(() => {
+                closeModal();
+                showToast('✅', name + ' 관심종목에 추가!');
+                refreshWatchlist();
+            }).catch(e => {
+                showToast('❌', '추가 실패: ' + e.message);
             });
-            saveWatchlist();
-            closeModal();
-            showToast('✅', name + ' 관심종목에 추가!');
-            refreshWatchlist();
         } else {
             const price = parseFloat(document.getElementById('input-price').value),
                 qty = parseInt(document.getElementById('input-qty').value);
@@ -2261,20 +2323,23 @@
     if (localStorage.getItem('theme') === 'light') toggleTheme();
     const hr = new Date().getHours();
     document.getElementById('greeting-text').textContent = (hr < 6 ? 'Good night' : hr < 12 ? 'Good morning' : hr < 18 ? 'Good afternoon' : 'Good evening') + ', 서연';
-    updateWatchBadge();
-    renderWatchlist();
+
     (async () => {
         try {
             const h = await apiGet('/api/health');
             if (h.status === 'ok') {
                 apiConnected = true;
                 setStatus('connected', '연결됨');
+                await loadWatchlist();
                 await refreshData();
                 startAutoRefresh();
             }
         } catch (e) {
+            await loadWatchlist();
             renderWithDummyData();
         }
+        updateWatchBadge();
+        renderWatchlist();
     })();
 </script>
 </body>
