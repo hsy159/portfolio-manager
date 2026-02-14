@@ -1643,14 +1643,11 @@
     }
 
     async function loadHoldings() {
-        if (!apiConnected) {
-            holdings = JSON.parse(localStorage.getItem('holdings')) || [];
-            return;
-        }
         try {
-            const r = await fetch(PROXY_URL + '/server/holdinglist.json', {signal: AbortSignal.timeout(8000)});
-            if (!r.ok) throw new Error('API ' + r.status);
-            holdings = await r.json();
+            const r = await fetch('./server/holdinglist.json', {signal: AbortSignal.timeout(8000)});
+            if (!r.ok) throw new Error('Failed to load: ' + r.status);
+            const defaultHoldings = await r.json();
+            holdings = JSON.parse(localStorage.getItem('holdings')) || defaultHoldings;
         } catch (e) {
             console.error('Load holdings:', e);
             holdings = JSON.parse(localStorage.getItem('holdings')) || [];
