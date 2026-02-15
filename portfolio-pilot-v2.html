@@ -1500,9 +1500,18 @@
             <div class="ticker-item"><span class="ticker-item-label">S&P 500</span><span class="ticker-item-value"
                                                                                          id="tk-sp500">—</span><span
                     id="tk-sp500-chg" style="font-size:11px">—</span></div>
+            <div class="ticker-item"><span class="ticker-item-label">Nasdaq</span><span class="ticker-item-value"
+                                                                                         id="tk-nasdaq">—</span><span
+                    id="tk-nasdaq-chg" style="font-size:11px">—</span></div>
+            <div class="ticker-item"><span class="ticker-item-label">Dow</span><span class="ticker-item-value"
+                                                                                     id="tk-dow">—</span><span
+                    id="tk-dow-chg" style="font-size:11px">—</span></div>
             <div class="ticker-item"><span class="ticker-item-label">KOSPI</span><span class="ticker-item-value"
                                                                                        id="tk-kospi">—</span><span
                     id="tk-kospi-chg" style="font-size:11px">—</span></div>
+            <div class="ticker-item"><span class="ticker-item-label">KOSDAQ</span><span class="ticker-item-value"
+                                                                                        id="tk-kosdaq">—</span><span
+                    id="tk-kosdaq-chg" style="font-size:11px">—</span></div>
             <div class="ticker-item"><span class="ticker-item-label">BTC</span><span class="ticker-item-value"
                                                                                      id="tk-btc">—</span><span
                     id="tk-btc-chg" style="font-size:11px">—</span></div>
@@ -2035,7 +2044,7 @@
                 liveData[h.symbol] = h;
             });
             try {
-                const td = await apiGet('/api/quote?symbols=USDKRW=X,^GSPC,^KS11,BTC-USD');
+                const td = await apiGet('/api/quote?symbols=USDKRW=X,^GSPC,^IXIC,^DJI,^KS11,^KQ11,BTC-USD');
                 updateTickerBar(td.results);
             } catch (e) {
             }
@@ -2197,7 +2206,10 @@
         };
         upd('usdkrw', 'USDKRW=X', '');
         upd('sp500', '^GSPC', '');
+        upd('nasdaq', '^IXIC', '');
+        upd('dow', '^DJI', '');
         upd('kospi', '^KS11', '');
+        upd('kosdaq', '^KQ11', '');
         upd('btc', 'BTC-USD', '$');
     }
 
