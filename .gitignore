@@ -1,3 +1,5 @@
 node_modules/
 .idea/
 server/package-lock.json
+server/.env
+.env
