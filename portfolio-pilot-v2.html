@@ -1061,6 +1061,166 @@
             display: block
         }
 
+        /* Search Page */
+        .search-page-input-wrap {
+            position: relative;
+            max-width: 600px;
+            margin-bottom: 24px
+        }
+
+        .search-page-input {
+            width: 100%;
+            padding: 14px 18px 14px 48px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text-primary);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.2s
+        }
+
+        .search-page-input:focus {
+            border-color: var(--accent)
+        }
+
+        .search-page-input::placeholder {
+            color: var(--text-muted)
+        }
+
+        .search-page-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            pointer-events: none
+        }
+
+        .search-page-results {
+            display: grid;
+            gap: 12px
+        }
+
+        .search-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.2s;
+            cursor: default
+        }
+
+        .search-card:hover {
+            border-color: rgba(212, 168, 67, 0.2);
+            box-shadow: var(--shadow)
+        }
+
+        .search-card-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex: 1;
+            min-width: 0
+        }
+
+        .search-card-icon {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, var(--navy-600), var(--navy-500));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--accent);
+            flex-shrink: 0
+        }
+
+        .search-card-info {
+            min-width: 0
+        }
+
+        .search-card-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis
+        }
+
+        .search-card-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 2px;
+            display: flex;
+            gap: 8px;
+            align-items: center
+        }
+
+        .search-card-meta-tag {
+            background: var(--bg-secondary);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px
+        }
+
+        .search-card-price {
+            text-align: right;
+            margin: 0 24px;
+            flex-shrink: 0
+        }
+
+        .search-card-price-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary)
+        }
+
+        .search-card-price-change {
+            font-size: 12px;
+            margin-top: 2px;
+            font-family: 'JetBrains Mono', monospace
+        }
+
+        .search-card-actions {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0
+        }
+
+        .search-card-actions .btn {
+            padding: 8px 14px;
+            font-size: 12px
+        }
+
+        .search-empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted)
+        }
+
+        .search-empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px
+        }
+
+        .search-loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+            font-size: 14px
+        }
+
         .fade-in {
             animation: fadeInUp 0.5s ease forwards;
             opacity: 0
@@ -1274,6 +1434,13 @@
                 <rect x="14" y="14" width="7" height="7" rx="1"/>
             </svg>
             대시보드
+        </div>
+        <div class="nav-item" onclick="switchPage('search',this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            종목 검색
         </div>
         <div class="nav-item" onclick="switchPage('watchlist',this)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1506,6 +1673,29 @@
                         <div class="panel-title" style="margin-bottom:20px">국가별 분포</div>
                         <div id="country-bars"></div>
                     </div>
+                </div>
+            </div>
+        </div>
+        <!-- SEARCH -->
+        <div class="page" id="page-search">
+            <div class="header fade-in">
+                <div>
+                    <div class="greeting">종목 탐색</div>
+                    <div class="page-title">종목 검색</div>
+                </div>
+            </div>
+            <div class="search-page-input-wrap fade-in stagger-1">
+                <svg class="search-page-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                    <circle cx="11" cy="11" r="8"/>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                <input type="text" class="search-page-input" id="search-page-input" placeholder="종목명, 티커, 또는 키워드를 입력하세요" oninput="searchPageQuery(this.value)">
+            </div>
+            <div id="search-page-results" class="fade-in stagger-2">
+                <div class="search-empty">
+                    <div class="search-empty-icon">🔍</div>
+                    <div style="font-size:16px;font-weight:600;color:var(--text-secondary);margin-bottom:6px">종목을 검색해 보세요</div>
+                    <div>종목명이나 티커를 입력하면 실시간 검색 결과가 표시됩니다</div>
                 </div>
             </div>
         </div>
@@ -2171,6 +2361,107 @@
         document.getElementById('input-search').value = name;
     }
 
+    // === SEARCH PAGE ===
+    let searchPageTimeout;
+
+    async function searchPageQuery(q) {
+        clearTimeout(searchPageTimeout);
+        const container = document.getElementById('search-page-results');
+        if (!q || q.length < 2) {
+            container.innerHTML = '<div class="search-empty"><div class="search-empty-icon">🔍</div><div style="font-size:16px;font-weight:600;color:var(--text-secondary);margin-bottom:6px">종목을 검색해 보세요</div><div>종목명이나 티커를 입력하면 실시간 검색 결과가 표시됩니다</div></div>';
+            return;
+        }
+        if (!apiConnected) {
+            container.innerHTML = '<div class="search-empty"><div class="search-empty-icon">⚠️</div><div style="font-size:16px;font-weight:600;color:var(--text-secondary);margin-bottom:6px">프록시 서버 미연결</div><div>검색 기능을 사용하려면 프록시 서버에 연결해 주세요</div></div>';
+            return;
+        }
+        container.innerHTML = '<div class="search-loading">검색 중...</div>';
+        searchPageTimeout = setTimeout(async () => {
+            try {
+                const data = await apiGet('/api/search?q=' + encodeURIComponent(q));
+                if (!data.results || !data.results.length) {
+                    container.innerHTML = '<div class="search-empty"><div class="search-empty-icon">📭</div><div style="font-size:16px;font-weight:600;color:var(--text-secondary);margin-bottom:6px">검색 결과가 없습니다</div><div>"' + q + '"에 대한 결과를 찾을 수 없습니다</div></div>';
+                    return;
+                }
+                // Fetch quotes for search results
+                const symbols = data.results.slice(0, 10).map(r => r.symbol);
+                let quotes = {};
+                try {
+                    const qData = await apiGet('/api/quote?symbols=' + encodeURIComponent(symbols.join(',')));
+                    if (qData.results) qData.results.forEach(r => { quotes[r.symbol] = r; });
+                } catch (e) {}
+                renderSearchResults(data.results.slice(0, 10), quotes);
+            } catch (e) {
+                container.innerHTML = '<div class="search-empty"><div class="search-empty-icon">❌</div><div style="font-size:16px;font-weight:600;color:var(--text-secondary);margin-bottom:6px">검색 오류</div><div>' + e.message + '</div></div>';
+            }
+        }, 500);
+    }
+
+    function renderSearchResults(results, quotes) {
+        const container = document.getElementById('search-page-results');
+        container.innerHTML = '<div class="search-page-results">' + results.map(r => {
+            const q = quotes[r.symbol] || {};
+            const hasPrice = q.price != null;
+            const chgClass = (q.changePercent || 0) >= 0 ? 'positive' : 'negative';
+            const chgSign = (q.changePercent || 0) >= 0 ? '+' : '';
+            const isKR = r.symbol.includes('.KS') || r.symbol.includes('.KQ');
+            const currency = q.currency || (isKR ? 'KRW' : 'USD');
+            const currencySymbol = currency === 'KRW' ? '₩' : '$';
+            const iconText = r.symbol.replace('.KS', '').replace('.KQ', '').substring(0, 3);
+            const inHoldings = holdings.some(h => h.symbol === r.symbol);
+            const inWatchlist = watchlist.some(w => w.symbol === r.symbol);
+            return '<div class="search-card">' +
+                '<div class="search-card-left">' +
+                '<div class="search-card-icon">' + iconText + '</div>' +
+                '<div class="search-card-info">' +
+                '<div class="search-card-name">' + (r.name || r.symbol) + '</div>' +
+                '<div class="search-card-meta">' +
+                '<span class="search-card-meta-tag">' + r.symbol + '</span>' +
+                (r.type ? '<span>' + r.type + '</span>' : '') +
+                (r.exchange ? '<span>' + r.exchange + '</span>' : '') +
+                '</div></div></div>' +
+                (hasPrice ? '<div class="search-card-price"><div class="search-card-price-value">' + currencySymbol + q.price.toLocaleString(undefined, {maximumFractionDigits: 2}) + '</div>' +
+                    '<div class="search-card-price-change ' + chgClass + '-text">' + chgSign + (q.changePercent || 0).toFixed(2) + '%</div></div>' : '') +
+                '<div class="search-card-actions">' +
+                (inHoldings ? '<button class="btn btn-sm btn-ghost" disabled style="opacity:0.5">보유 중</button>' :
+                    '<button class="btn btn-sm btn-ghost" onclick="searchPageAddHolding(\'' + r.symbol + '\',\'' + (r.name || '').replace(/'/g, "\\'") + '\')">보유종목 추가</button>') +
+                (inWatchlist ? '<button class="btn btn-sm btn-ghost" disabled style="opacity:0.5">관심 중</button>' :
+                    '<button class="btn btn-sm btn-primary" onclick="searchPageAddWatchlist(\'' + r.symbol + '\',\'' + (r.name || '').replace(/'/g, "\\'") + '\')">관심종목 추가</button>') +
+                '</div></div>';
+        }).join('') + '</div>';
+    }
+
+    function searchPageAddHolding(symbol, name) {
+        openModal('holding');
+        document.getElementById('input-search').value = name;
+        document.getElementById('input-name').value = name;
+        document.getElementById('input-ticker').value = symbol;
+    }
+
+    function searchPageAddWatchlist(symbol, name) {
+        const isKR = symbol.includes('.KS') || symbol.includes('.KQ') || /^\d{6}$/.test(symbol);
+        const sym = isKR && !symbol.includes('.') ? symbol + '.KS' : symbol;
+        if (watchlist.find(w => w.symbol === sym)) {
+            showToast('⚠️', '이미 관심종목에 있습니다.');
+            return;
+        }
+        const newItem = {
+            symbol: sym,
+            name,
+            market: isKR ? 'KR' : 'US',
+            sector: 'Technology',
+            color: COLORS[watchlist.length % COLORS.length]
+        };
+        addToWatchlist(newItem).then(() => {
+            showToast('✅', name + ' 관심종목에 추가!');
+            // Re-render search results to update button state
+            const input = document.getElementById('search-page-input');
+            if (input && input.value.length >= 2) searchPageQuery(input.value);
+        }).catch(e => {
+            showToast('❌', '추가 실패: ' + e.message);
+        });
+    }
+
     // === MODAL ===
     function openModal(mode) {
         modalMode = mode || 'holding';
@@ -2248,6 +2539,9 @@
             renderBars();
         }
         if (page === 'watchlist') refreshWatchlist();
+        if (page === 'search') {
+            setTimeout(() => document.getElementById('search-page-input')?.focus(), 100);
+        }
     }
 
     function toggleTheme() {
