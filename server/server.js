@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import YahooFinance from 'yahoo-finance2';
@@ -5,12 +6,32 @@ const yahooFinance = new YahooFinance();
 import fs from 'fs/promises';
 import path from 'path';
 import {fileURLToPath} from 'url';
+import Anthropic from '@anthropic-ai/sdk';
+import {Ollama} from 'ollama';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// Determine LLM provider (Ollama or Anthropic)
+const USE_OLLAMA = process.env.USE_OLLAMA === 'true' || !process.env.ANTHROPIC_API_KEY;
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'qwen2.5:7b';
+const OLLAMA_HOST = process.env.OLLAMA_HOST || 'http://localhost:11434';
+
+// Initialize LLM clients
+let anthropic, ollama;
+if (USE_OLLAMA) {
+    console.log(`[LLM] Using Ollama with model: ${OLLAMA_MODEL}`);
+    ollama = new Ollama({host: OLLAMA_HOST});
+} else {
+    console.log('[LLM] Using Anthropic API');
+    anthropic = new Anthropic({
+        apiKey: process.env.ANTHROPIC_API_KEY || 'placeholder-key',
+        baseURL: process.env.LLM_BASE_URL
+    });
+}
 
 app.use(cors({origin: '*'}));
 app.use(express.json());
@@ -320,6 +341,170 @@ app.delete('/api/watchlist/:symbol', async (req, res) => {
     } catch (err) {
         console.error('[watchlist] Error:', err.message);
         res.status(500).json({error: err.message});
+    }
+});
+
+// ===== PORTFOLIO ANALYSIS =====
+app.post('/api/portfolio-analysis', async (req, res) => {
+    const {holdings, summary, marketConditions} = req.body;
+    console.log(`[portfolio-analysis] Request - analyzing ${holdings?.length || 0} holdings`);
+
+    try {
+        if (!holdings?.length) {
+            console.log('[portfolio-analysis] Failed - no holdings provided');
+            return res.status(400).json({error: 'holdings required'});
+        }
+
+        // Prepare portfolio data for LLM analysis
+        const portfolioData = {
+            summary: {
+                totalValueKRW: summary?.totalValueKRW || 0,
+                totalCostKRW: summary?.totalCostKRW || 0,
+                totalReturnPct: summary?.totalReturnPct || 0,
+                holdingsCount: holdings.length
+            },
+            holdings: holdings.map(h => ({
+                symbol: h.symbol,
+                name: h.name,
+                sector: h.sector || 'Unknown',
+                currentPrice: h.currentPrice,
+                buyPrice: h.buyPrice,
+                qty: h.qty,
+                valueKRW: h.valueKRW,
+                costKRW: h.costKRW,
+                returnPct: h.returnPct,
+                profitKRW: h.profitKRW,
+                currency: h.currency
+            })),
+            marketConditions: marketConditions || {}
+        };
+
+        // Calculate sector allocation
+        const sectorAllocation = {};
+        holdings.forEach(h => {
+            const sector = h.sector || 'Unknown';
+            sectorAllocation[sector] = (sectorAllocation[sector] || 0) + (h.valueKRW || 0);
+        });
+
+        const totalValue = portfolioData.summary.totalValueKRW || 0;
+        const totalCost = portfolioData.summary.totalCostKRW || 0;
+        const sectorBreakdown = Object.entries(sectorAllocation)
+            .map(([sector, value]) => {
+                const percentage = totalValue > 0 ? ((value / totalValue) * 100).toFixed(1) : '0.0';
+                const valueStr = Math.round(value || 0).toLocaleString('ko-KR');
+                return `${sector}: ${percentage}% (${valueStr}원)`;
+            })
+            .join('\n');
+
+        // Prepare prompt for LLM
+        const prompt = `당신은 전문 포트폴리오 매니저입니다. 다음 포트폴리오를 분석하고 조정 제안을 해주세요.
+
+## 포트폴리오 요약
+- 총 자산: ${totalValue.toLocaleString('ko-KR')}원
+- 총 투자금: ${totalCost.toLocaleString('ko-KR')}원
+- 총 수익률: ${portfolioData.summary.totalReturnPct || 0}%
+- 보유 종목 수: ${portfolioData.summary.holdingsCount}개
+
+## 섹터별 비중
+${sectorBreakdown}
+
+## 개별 종목
+${portfolioData.holdings.map(h => {
+    const name = h.name || h.symbol;
+    const returnPct = (h.returnPct || 0).toFixed(2);
+    const valueKRW = (h.valueKRW || 0).toLocaleString('ko-KR');
+    const sector = h.sector || 'Unknown';
+    return `- ${name} (${h.symbol}): ${returnPct}% 수익률, ${valueKRW}원 (${sector})`;
+}).join('\n')}
+
+다음 관점에서 분석해주세요:
+1. 포트폴리오의 전반적인 건강도
+2. 섹터 다각화 수준
+3. 리스크 평가 (집중도, 변동성 등)
+4. 구체적인 조정 제안 (매수/매도/유지)
+5. 장기 투자 관점에서의 조언
+
+JSON 형식으로 답변해주세요:
+{
+  "overallHealth": "전반적인 평가 (1-10점)",
+  "diversification": "다각화 평가 및 코멘트",
+  "riskAssessment": "리스크 평가",
+  "recommendations": [
+    {
+      "symbol": "종목 심볼",
+      "action": "BUY/SELL/HOLD",
+      "reason": "이유",
+      "targetAllocation": "목표 비중 (%)"
+    }
+  ],
+  "longTermAdvice": "장기 투자 조언"
+}`;
+
+        console.log('[portfolio-analysis] Calling LLM...');
+
+        let responseText;
+        if (USE_OLLAMA) {
+            // Use Ollama
+            const response = await ollama.chat({
+                model: OLLAMA_MODEL,
+                messages: [{
+                    role: 'user',
+                    content: prompt
+                }],
+                stream: false,
+                options: {
+                    temperature: 0.7,
+                    num_predict: 4096
+                }
+            });
+            responseText = response.message.content;
+        } else {
+            // Use Anthropic
+            const message = await anthropic.messages.create({
+                model: 'claude-3-5-sonnet-20241022',
+                max_tokens: 4096,
+                temperature: 0.7,
+                messages: [{
+                    role: 'user',
+                    content: prompt
+                }]
+            });
+            responseText = message.content[0].text;
+        }
+
+        console.log('[portfolio-analysis] LLM response received');
+
+        // Parse JSON response
+        let analysis;
+        try {
+            // Extract JSON from markdown code blocks if present
+            const jsonMatch = responseText.match(/```json\n?([\s\S]*?)\n?```/) || responseText.match(/```\n?([\s\S]*?)\n?```/);
+            const jsonText = jsonMatch ? jsonMatch[1] : responseText;
+            analysis = JSON.parse(jsonText);
+        } catch (e) {
+            console.warn('[portfolio-analysis] Failed to parse JSON, using raw text');
+            analysis = {
+                overallHealth: 'N/A',
+                diversification: responseText,
+                riskAssessment: 'Unable to parse structured response',
+                recommendations: [],
+                longTermAdvice: 'Please check the raw analysis'
+            };
+        }
+
+        console.log('[portfolio-analysis] Success - analysis completed');
+        res.json({
+            analysis,
+            rawResponse: responseText,
+            analyzedAt: new Date().toISOString()
+        });
+
+    } catch (err) {
+        console.error('[portfolio-analysis] Error:', err.message);
+        res.status(500).json({
+            error: err.message,
+            details: err.stack
+        });
     }
 });
 
