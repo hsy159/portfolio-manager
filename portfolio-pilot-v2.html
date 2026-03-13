@@ -2521,7 +2521,7 @@
 
     function renderSearchResults(results, quotes) {
         const container = document.getElementById('search-page-results');
-        container.innerHTML = '<div class="search-page-results">' + results.map(r => {
+        container.innerHTML = '<div class="search-page-results">' + results.filter(r => r.symbol).map(r => {
             const q = quotes[r.symbol] || {};
             const hasPrice = q.price != null;
             const chgClass = (q.changePercent || 0) >= 0 ? 'positive' : 'negative';
