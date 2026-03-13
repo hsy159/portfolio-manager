@@ -1404,6 +1404,77 @@
             background: rgba(231, 76, 60, 0.1)
         }
 
+        .edit-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 13px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.2s;
+            opacity: 0
+        }
+
+        tr:hover .edit-btn {
+            opacity: 1
+        }
+
+        .edit-btn:hover {
+            color: var(--accent);
+            background: rgba(212, 168, 67, 0.1)
+        }
+
+        .edit-inline-input {
+            background: var(--card);
+            border: 1px solid var(--accent);
+            color: var(--text-primary);
+            font-size: 13px;
+            font-family: 'SF Mono', monospace;
+            padding: 4px 8px;
+            border-radius: 6px;
+            width: 100px;
+            text-align: right;
+            outline: none;
+            transition: border-color 0.2s
+        }
+
+        .edit-inline-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(212, 168, 67, 0.2)
+        }
+
+        .edit-actions {
+            display: flex;
+            gap: 4px
+        }
+
+        .edit-save-btn, .edit-cancel-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.2s
+        }
+
+        .edit-save-btn {
+            color: var(--positive)
+        }
+
+        .edit-save-btn:hover {
+            background: rgba(46, 204, 113, 0.1)
+        }
+
+        .edit-cancel-btn {
+            color: var(--negative)
+        }
+
+        .edit-cancel-btn:hover {
+            background: rgba(231, 76, 60, 0.1)
+        }
+
         @media (max-width: 1200px) {
             .content-grid {
                 grid-template-columns:1fr
@@ -2139,10 +2210,16 @@
             }) + '<br><span style="font-size:10px;color:var(--text-muted)">₩' + (h.buyPrice * exchangeRate).toLocaleString(undefined, {maximumFractionDigits: 0}) + '</span>' : '₩' + h.buyPrice?.toLocaleString();
             const cs = d.changePercent ? '(' + (d.changePercent >= 0 ? '+' : '') + d.changePercent.toFixed(2) + '%)' : '';
             const ri = holdings.indexOf(h);
-            return '<tr><td><div class="ticker-cell"><div class="ticker-icon" style="background:' + h.color + '">' + h.symbol.replace('.KS', '').replace('.KQ', '').slice(0, 2) + '</div><div><div class="ticker-name">' + h.name + ' ' + flag + '</div><div class="ticker-symbol">' + h.symbol + ' <span style="color:' + (d.changePercent >= 0 ? 'var(--positive)' : 'var(--negative)') + ';font-size:10px">' + cs + '</span></div></div></div></td><td class="mono">' + h.qty.toLocaleString() + '</td><td class="mono">' + avgPs + '</td><td class="mono">' + ps + '</td><td class="mono ' + (r >= 0 ? 'positive-text' : 'negative-text') + '">' + (r >= 0 ? '+' : '') + r.toFixed(1) + '%</td><td class="mono">₩' + Math.round(v).toLocaleString() + '</td><td class="mono">' + w.toFixed(1) + '%</td><td><button class="delete-btn" onclick="event.stopPropagation();deleteHolding(' + ri + ')" title="삭제">✕</button></td></tr>';
+            const isEditing = ri === editingIndex;
+            if (isEditing) {
+                return '<tr><td><div class="ticker-cell"><div class="ticker-icon" style="background:' + h.color + '">' + h.symbol.replace('.KS', '').replace('.KQ', '').slice(0, 2) + '</div><div><input id="edit-name-' + ri + '" class="edit-inline-input" style="width:120px;text-align:left" value="' + h.name.replace(/"/g, '&quot;') + '" onkeydown="if(event.key===\'Enter\')saveEdit(' + ri + ');if(event.key===\'Escape\')cancelEdit()"><div class="ticker-symbol">' + h.symbol + '</div></div></div></td><td><input id="edit-qty-' + ri + '" class="edit-inline-input" style="width:80px" type="number" min="1" value="' + h.qty + '" onkeydown="if(event.key===\'Enter\')saveEdit(' + ri + ');if(event.key===\'Escape\')cancelEdit()"></td><td><input id="edit-price-' + ri + '" class="edit-inline-input" type="number" min="0" step="any" value="' + h.buyPrice + '" onkeydown="if(event.key===\'Enter\')saveEdit(' + ri + ');if(event.key===\'Escape\')cancelEdit()"></td><td class="mono">' + ps + '</td><td class="mono ' + (r >= 0 ? 'positive-text' : 'negative-text') + '">' + (r >= 0 ? '+' : '') + r.toFixed(1) + '%</td><td class="mono">₩' + Math.round(v).toLocaleString() + '</td><td class="mono">' + w.toFixed(1) + '%</td><td><div class="edit-actions"><button class="edit-save-btn" onclick="event.stopPropagation();saveEdit(' + ri + ')" title="저장">✓</button><button class="edit-cancel-btn" onclick="event.stopPropagation();cancelEdit()" title="취소">✕</button></div></td></tr>';
+            }
+            return '<tr><td><div class="ticker-cell"><div class="ticker-icon" style="background:' + h.color + '">' + h.symbol.replace('.KS', '').replace('.KQ', '').slice(0, 2) + '</div><div><div class="ticker-name">' + h.name + ' ' + flag + '</div><div class="ticker-symbol">' + h.symbol + ' <span style="color:' + (d.changePercent >= 0 ? 'var(--positive)' : 'var(--negative)') + ';font-size:10px">' + cs + '</span></div></div></div></td><td class="mono">' + h.qty.toLocaleString() + '</td><td class="mono">' + avgPs + '</td><td class="mono">' + ps + '</td><td class="mono ' + (r >= 0 ? 'positive-text' : 'negative-text') + '">' + (r >= 0 ? '+' : '') + r.toFixed(1) + '%</td><td class="mono">₩' + Math.round(v).toLocaleString() + '</td><td class="mono">' + w.toFixed(1) + '%</td><td><div class="edit-actions"><button class="edit-btn" onclick="event.stopPropagation();editHolding(' + ri + ')" title="편집">✎</button><button class="delete-btn" onclick="event.stopPropagation();deleteHolding(' + ri + ')" title="삭제">✕</button></div></td></tr>';
         }).join('');
         document.getElementById('market-state-text').textContent = apiConnected ? '실시간 시세 반영' : '더미 데이터 (프록시 연결 필요)';
     }
+
+    let editingIndex = -1;
 
     function deleteHolding(i) {
         if (!confirm(holdings[i].name + ' 종목을 삭제하시겠습니까?')) return;
@@ -2151,6 +2228,39 @@
         saveHoldings();
         refreshData();
         showToast('🗑️', '종목 삭제 완료');
+    }
+
+    function editHolding(i) {
+        editingIndex = i;
+        renderHoldings();
+        setTimeout(() => {
+            const el = document.getElementById('edit-name-' + i);
+            if (el) el.focus();
+        }, 50);
+    }
+
+    function cancelEdit() {
+        editingIndex = -1;
+        renderHoldings();
+    }
+
+    function saveEdit(i) {
+        const nameEl = document.getElementById('edit-name-' + i);
+        const priceEl = document.getElementById('edit-price-' + i);
+        const qtyEl = document.getElementById('edit-qty-' + i);
+        const newName = nameEl.value.trim();
+        const newPrice = parseFloat(priceEl.value);
+        const newQty = parseInt(qtyEl.value);
+        if (!newName) return showToast('⚠️', '종목명을 입력해주세요.');
+        if (isNaN(newPrice) || newPrice <= 0) return showToast('⚠️', '올바른 평균단가를 입력해주세요.');
+        if (isNaN(newQty) || newQty <= 0) return showToast('⚠️', '올바른 수량을 입력해주세요.');
+        holdings[i].name = newName;
+        holdings[i].buyPrice = newPrice;
+        holdings[i].qty = newQty;
+        editingIndex = -1;
+        saveHoldings();
+        refreshData();
+        showToast('✅', newName + ' 수정 완료!');
     }
 
     function filterHoldings(f, btn) {
