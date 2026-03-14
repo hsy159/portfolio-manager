@@ -1,0 +1,146 @@
+[
+  {
+    "symbol": "000660.KS",
+    "name": "SK하이닉스",
+    "market": "KR",
+    "buyPrice": 179012,
+    "qty": 225,
+    "sector": "Semiconductor",
+    "color": "#3498db"
+  },
+  {
+    "symbol": "194480.KQ",
+    "name": "데브시스터즈",
+    "market": "KR",
+    "buyPrice": 63006,
+    "qty": 2000,
+    "sector": "Gaming",
+    "color": "#8e44ad"
+  },
+  {
+    "symbol": "TSLA",
+    "name": "Tesla",
+    "market": "US",
+    "buyPrice": 289.79,
+    "qty": 221.0032,
+    "sector": "EV / Mobility",
+    "color": "#e74c3c"
+  },
+  {
+    "symbol": "NVDA",
+    "name": "NVIDIA",
+    "market": "US",
+    "buyPrice": 130.04,
+    "qty": 211.6147,
+    "sector": "Semiconductor",
+    "color": "#2ecc71"
+  },
+  {
+    "symbol": "013700.KS",
+    "name": "까뮤이앤씨",
+    "market": "KR",
+    "buyPrice": 1599,
+    "qty": 33464,
+    "sector": "Construction",
+    "color": "#c0392b"
+  },
+  {
+    "symbol": "233740.KS",
+    "name": "KODEX 코스닥150레버리지",
+    "market": "KR",
+    "buyPrice": 18015,
+    "qty": 2449,
+    "sector": "ETF / Leverage",
+    "color": "#7f8c8d"
+  },
+  {
+    "symbol": "196170.KQ",
+    "name": "알테오젠",
+    "market": "KR",
+    "buyPrice": 420305,
+    "qty": 100,
+    "sector": "Bio / Pharma",
+    "color": "#16a085"
+  },
+  {
+    "symbol": "PLTR",
+    "name": "Palantir",
+    "market": "US",
+    "buyPrice": 114.95,
+    "qty": 104.1111,
+    "sector": "Technology",
+    "color": "#9b59b6"
+  },
+  {
+    "symbol": "META",
+    "name": "Meta",
+    "market": "US",
+    "buyPrice": 670.50,
+    "qty": 20.8128,
+    "sector": "Technology",
+    "color": "#d4a843"
+  },
+  {
+    "symbol": "MSFT",
+    "name": "Microsoft",
+    "market": "US",
+    "buyPrice": 475.27,
+    "qty": 25.2435,
+    "sector": "Technology",
+    "color": "#1abc9c"
+  },
+  {
+    "symbol": "SOXL",
+    "name": "SOXL",
+    "market": "US",
+    "buyPrice": 55.22,
+    "qty": 121,
+    "sector": "ETF / Leverage",
+    "color": "#95a5c4"
+  },
+  {
+    "symbol": "138080.KQ",
+    "name": "오이솔루션",
+    "market": "KR",
+    "buyPrice": 35214,
+    "qty": 600,
+    "sector": "Technology",
+    "color": "#e67e22"
+  },
+  {
+    "symbol": "475150.KS",
+    "name": "SK이터닉스",
+    "market": "KR",
+    "buyPrice": 27980,
+    "qty": 216,
+    "sector": "Energy",
+    "color": "#f39c12"
+  },
+  {
+    "symbol": "FIG",
+    "name": "Figma",
+    "market": "US",
+    "buyPrice": 36.84,
+    "qty": 100,
+    "sector": "Technology",
+    "color": "#2c3e50"
+  },
+  {
+    "symbol": "BMNU",
+    "name": "BMNU",
+    "market": "US",
+    "buyPrice": 4.58,
+    "qty": 860,
+    "sector": "Technology",
+    "color": "#d35400"
+  },
+  {
+    "symbol": "ASBP",
+    "name": "Aspire Biopharma",
+    "market": "US",
+    "buyPrice": 6.50,
+    "qty": 200,
+    "sector": "Bio / Pharma",
+    "color": "#e8c468"
+  }
+]
