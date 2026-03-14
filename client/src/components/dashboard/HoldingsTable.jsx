@@ -1,7 +1,25 @@
+import { useState } from 'react';
 import usePortfolioStore from '../../stores/portfolioStore';
 import useUiStore from '../../stores/uiStore';
 import HoldingsRow from './HoldingsRow';
 import HoldingsRowEdit from './HoldingsRowEdit';
+
+function SortButton({ field, sortField, sortDir, onSort }) {
+    const active = sortField === field;
+    return (
+        <button
+            onClick={() => onSort(field)}
+            style={{
+                background: 'none', border: 'none', cursor: 'pointer', padding: '0 2px',
+                color: active ? 'var(--accent)' : 'var(--text-muted)',
+                fontSize: 10, lineHeight: 1, verticalAlign: 'middle',
+            }}
+            title={active ? (sortDir === 'asc' ? '오름차순' : '내림차순') : '정렬'}
+        >
+            {active ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}
+        </button>
+    );
+}
 
 export default function HoldingsTable() {
     const holdings = usePortfolioStore((s) => s.holdings);
@@ -16,8 +34,39 @@ export default function HoldingsTable() {
     const setCurrentFilter = useUiStore((s) => s.setCurrentFilter);
     const showToast = useUiStore((s) => s.showToast);
 
+    const [sortField, setSortField] = useState(null);
+    const [sortDir, setSortDir] = useState('desc');
+
+    const handleSort = (field) => {
+        if (sortField === field) {
+            setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+        } else {
+            setSortField(field);
+            setSortDir('desc');
+        }
+    };
+
     const totalValue = summary?.totalValueKRW || 0;
-    const filtered = holdings.filter((h) => currentFilter === 'all' || h.market === currentFilter);
+    let filtered = holdings.filter((h) => currentFilter === 'all' || h.market === currentFilter);
+
+    if (sortField) {
+        filtered = [...filtered].sort((a, b) => {
+            const la = liveData[a.symbol] || {};
+            const lb = liveData[b.symbol] || {};
+            let va, vb;
+            if (sortField === 'currentPrice') {
+                va = la.currentPrice ?? 0;
+                vb = lb.currentPrice ?? 0;
+            } else if (sortField === 'returnPct') {
+                va = la.returnPct ?? 0;
+                vb = lb.returnPct ?? 0;
+            } else if (sortField === 'valueKRW') {
+                va = la.valueKRW ?? 0;
+                vb = lb.valueKRW ?? 0;
+            }
+            return sortDir === 'asc' ? va - vb : vb - va;
+        });
+    }
 
     const handleSave = (idx, updates) => {
         updateHolding(idx, updates);
@@ -50,7 +99,11 @@ export default function HoldingsTable() {
             <table className="holdings-table">
                 <thead>
                     <tr>
-                        <th>종목</th><th>수량</th><th>평균단가</th><th>현재가</th><th>수익률</th><th>평가금액</th><th>비중</th><th></th>
+                        <th>종목</th><th>수량</th><th>평균단가</th>
+                        <th>현재가 <SortButton field="currentPrice" sortField={sortField} sortDir={sortDir} onSort={handleSort} /></th>
+                        <th>수익률 <SortButton field="returnPct" sortField={sortField} sortDir={sortDir} onSort={handleSort} /></th>
+                        <th>평가금액 <SortButton field="valueKRW" sortField={sortField} sortDir={sortDir} onSort={handleSort} /></th>
+                        <th>비중</th><th></th>
                     </tr>
                 </thead>
                 <tbody>
