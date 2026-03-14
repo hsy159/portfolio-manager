@@ -27,6 +27,8 @@ export default function HoldingsTable() {
     const exchangeRate = usePortfolioStore((s) => s.exchangeRate);
     const summary = usePortfolioStore((s) => s.summary);
     const updateHolding = usePortfolioStore((s) => s.updateHolding);
+    const updateLiveData = usePortfolioStore((s) => s.updateLiveData);
+    const setSummary = usePortfolioStore((s) => s.setSummary);
     const removeHolding = usePortfolioStore((s) => s.removeHolding);
     const currentFilter = useUiStore((s) => s.currentFilter);
     const editingIndex = useUiStore((s) => s.editingIndex);
@@ -70,6 +72,39 @@ export default function HoldingsTable() {
 
     const handleSave = (idx, updates) => {
         updateHolding(idx, updates);
+
+        const holding = { ...holdings[idx], ...updates };
+        const live = liveData[holding.symbol];
+        if (live) {
+            const isKR = live.currency === 'KRW';
+            const price = live.currentPrice;
+            const valueKRW = isKR ? price * holding.qty : price * holding.qty * exchangeRate;
+            const costKRW = isKR ? holding.buyPrice * holding.qty : holding.buyPrice * holding.qty * exchangeRate;
+            const updatedLive = {
+                ...live,
+                qty: holding.qty,
+                buyPrice: holding.buyPrice,
+                name: holding.name,
+                returnPct: ((price - holding.buyPrice) / holding.buyPrice) * 100,
+                valueKRW: Math.round(valueKRW),
+                costKRW: Math.round(costKRW),
+                profitKRW: Math.round(valueKRW - costKRW),
+            };
+            updateLiveData({ [holding.symbol]: updatedLive });
+
+            const allLive = { ...liveData, [holding.symbol]: updatedLive };
+            const tv = Object.values(allLive).reduce((s, l) => s + (l.valueKRW || 0), 0);
+            const tc = Object.values(allLive).reduce((s, l) => s + (l.costKRW || 0), 0);
+            setSummary({
+                ...summary,
+                totalValueKRW: tv,
+                totalCostKRW: tc,
+                totalProfitKRW: tv - tc,
+                totalReturnPct: tc > 0 ? ((tv - tc) / tc) * 100 : 0,
+                holdingsCount: holdings.length,
+            });
+        }
+
         setEditingIndex(-1);
         showToast('✅', '종목 수정 완료');
     };
