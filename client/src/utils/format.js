@@ -1,6 +1,4 @@
 export function formatKRW(value) {
-    if (value >= 1e8) return '₩' + (value / 1e8).toFixed(1) + '억';
-    if (value >= 1e4) return '₩' + (value / 1e4).toFixed(0) + '만';
     return '₩' + Math.round(value).toLocaleString();
 }
 
